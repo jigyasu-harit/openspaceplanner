@@ -4,7 +4,7 @@ tasks:
     - name: Frontend
       init: |
           cd Web
-          npm ci
+          npm ci --legacy-peer-deps
       command: |
           cd Web
           npm run build:dev
