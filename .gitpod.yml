@@ -19,6 +19,7 @@ tasks:
           gp sync-await deps
           cd Web
           dotnet watch run
+      openMode: split-right
 
 ports:
     - port: 5000
