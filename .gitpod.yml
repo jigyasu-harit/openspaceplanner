@@ -9,9 +9,11 @@ tasks:
           npm run build:dev
           gp sync-done deps
     - command: |
+          gp sync-await deps
           cd Web
           npm run watch
     - command: |
+          gp sync-await deps
           cd Web
           dotnet watch run
 
