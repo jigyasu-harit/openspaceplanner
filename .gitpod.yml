@@ -17,7 +17,7 @@ tasks:
           gp sync-await frontend
       command: |
           cd Web
-          dotnet watch run
+          dotnet watch run && gp url 5000
       openMode: split-right
 
 ports:
