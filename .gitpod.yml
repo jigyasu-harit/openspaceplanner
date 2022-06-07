@@ -5,10 +5,11 @@ tasks:
       init: |
           cd Web
           npm ci
-          npm run build:dev
       command: |
           cd Web
-          npm run watch && gp sync-done frontend
+          npm run build:dev
+          gp sync-done frontend
+          npm run watch
 
     - name: Backend
       init: |
@@ -17,7 +18,8 @@ tasks:
       command: |
           cd Web
           gp sync-await frontend
-          dotnet watch run && gp url 5000
+          gp url 5000
+          dotnet watch run
       openMode: split-right
 
 ports:
