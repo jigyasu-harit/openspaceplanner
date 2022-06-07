@@ -1,18 +1,21 @@
 image: gitpod/workspace-dotnet
 
 tasks:
-    - init: |
-          dotnet tool restore
-          dotnet paket restore
+    - name: Frontend
+      init: |
           cd Web
           npm ci
           npm run build:dev
           gp sync-done deps
-    - command: |
-          gp sync-await deps
+      command: |
           cd Web
           npm run watch
-    - command: |
+
+    - name: Backend
+      init: |
+          dotnet tool restore
+          dotnet paket restore
+      command: |
           gp sync-await deps
           cd Web
           dotnet watch run
