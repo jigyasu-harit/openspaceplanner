@@ -15,8 +15,8 @@ tasks:
       init: |
           dotnet tool restore
           dotnet paket restore
-      command: |
           gp sync-await deps
+      command: |
           cd Web
           dotnet watch run
       openMode: split-right
