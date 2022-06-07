@@ -33,6 +33,7 @@ namespace openspace
             else
             {
                 app.UseHsts();
+                app.UseHttpsRedirection();
             }
 
             app.Use(async (context, next) =>
@@ -47,8 +48,6 @@ namespace openspace
             });
 
             app.UseRouting();
-            app.UseHttpsRedirection();
-            app.UseDefaultFiles();
             app.UseStaticFiles(new StaticFileOptions()
             {
                 OnPrepareResponse = (context) =>
