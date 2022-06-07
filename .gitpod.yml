@@ -14,9 +14,9 @@ tasks:
       init: |
           dotnet tool restore
           dotnet paket restore
-          gp sync-await frontend
       command: |
           cd Web
+          gp sync-await frontend
           dotnet watch run && gp url 5000
       openMode: split-right
 
