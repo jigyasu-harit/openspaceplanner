@@ -1,1 +1,21 @@
 image: gitpod/workspace-dotnet
+
+tasks:
+    - init: |
+          dotnet tool restore
+          dotnet paket restore
+          cd Web
+          npm ci
+          npm run build:dev
+          gp sync-done deps
+    - command: |
+          cd Web
+          npm run watch
+    - command: |
+          cd Web
+          dotnet watch run
+
+ports:
+    - port: 5000
+      onOpen: open-browser
+      visibility: public
