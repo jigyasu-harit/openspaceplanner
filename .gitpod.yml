@@ -7,8 +7,6 @@ tasks:
           npm ci
       command: |
           cd Web
-          npm run build:dev
-          gp sync-done frontend
           npm run watch
 
     - name: Backend
@@ -17,7 +15,6 @@ tasks:
           dotnet paket restore
       command: |
           cd Web
-          gp sync-await frontend
           gp url 5000
           dotnet watch run
       openMode: split-right
