@@ -6,16 +6,15 @@ tasks:
           cd Web
           npm ci
           npm run build:dev
-          gp sync-done deps
       command: |
           cd Web
-          npm run watch
+          npm run watch && gp sync-done frontend
 
     - name: Backend
       init: |
           dotnet tool restore
           dotnet paket restore
-          gp sync-await deps
+          gp sync-await frontend
       command: |
           cd Web
           dotnet watch run
