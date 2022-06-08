@@ -19,6 +19,7 @@ tasks:
           gp sync-await frontend
       command: |
           gp url 5000
+          sleep 60
           dotnet watch run
       openMode: split-right
 
