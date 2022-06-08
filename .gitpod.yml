@@ -5,19 +5,20 @@ tasks:
       init: |
           cd Web
           npm ci --legacy-peer-deps
-      command: |
-          cd Web
           npm run build:dev
           gp sync-done frontend
+      command: |
+          cd Web
           npm run watch
 
     - name: Backend
       init: |
           dotnet tool restore
           dotnet paket restore
+          dotnet build
+          gp sync-await frontend
       command: |
           cd Web
-          gp sync-await frontend
           gp url 5000
           dotnet watch run
       openMode: split-right
