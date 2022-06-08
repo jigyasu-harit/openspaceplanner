@@ -8,17 +8,16 @@ tasks:
           npm run build:dev
           gp sync-done frontend
       command: |
-          cd Web
           npm run watch
 
     - name: Backend
       init: |
           dotnet tool restore
           dotnet paket restore
+          cd Web
           dotnet build
           gp sync-await frontend
       command: |
-          cd Web
           gp url 5000
           dotnet watch run
       openMode: split-right
