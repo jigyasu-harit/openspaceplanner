@@ -156,9 +156,24 @@ export class SessionModalComponent implements OnInit {
     this.router.navigate(["/"]);
   }
 
-  public optimiseTopics(){
-    if(confirm("Do you really want to optimise the topics?")){
-      this.sessionService.optimiseTopics()
+  public async optimiseTopics(){
+    let optimiseUnAssignedTopics = false;
+    if(confirm("Do you want to optimise unassigned topics?")){
+      optimiseUnAssignedTopics = true;
+    }
+    await this.sessionService.optimiseTopics(optimiseUnAssignedTopics)
+  }
+
+  public resetTopics(){
+    if(confirm("Do you really want to unassign all topics")){
+      
+      this.sessionService.currentSession.topics = this.sessionService.currentSession.topics.map((topic: Topic) => ({
+        ...topic,
+        slotId: null,
+        roomId: null
+      }));
+
+      this.sessionService.update(this.sessionService.currentSession);
     }
   }
 }
