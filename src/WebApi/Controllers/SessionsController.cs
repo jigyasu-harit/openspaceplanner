@@ -143,13 +143,13 @@ public class SessionsController : Controller
 
                 for (var s = slotId; s < slots.Count; s++)
                 {
-                    var slot = slots[slotId];
+                    var slot = slots[s];
 
                     for (var r = roomId; r < rooms.Count; r++)
                     {
-                        var room = rooms[roomId];
+                        var room = rooms[r];
 
-                        if (calendar.ContainsKey((slotId, roomId)))
+                        if (calendar.ContainsKey((s, r)))
                         {
                             continue;
                         }
@@ -167,13 +167,9 @@ public class SessionsController : Controller
                         };
                         session.Topics.Remove(topic);
                         session.Topics.Add(newTopic);
-                        calendar[(slotId, roomId)] = topic;
+                        calendar[(s, r)] = newTopic;
                         topicAssigned = true;
-
-                        if (topicAssigned)
-                        {
-                            break;
-                        }
+                        break;
                     }
 
                     if (topicAssigned)
@@ -184,12 +180,59 @@ public class SessionsController : Controller
 
                 if (!topicAssigned)
                 {
-                    topic = topic with
+                    var newTopic = topic with
                     {
                         SlotId = null,
                         RoomId = null,
                     };
-                    unassignedTopics.Add(topic);
+                    session.Topics.Remove(topic);
+                    session.Topics.Add(newTopic);
+                    unassignedTopics.Add(newTopic);
+                }
+            }
+
+            roomId = 0;
+            slotId = 0;
+            for (var i = 0; i < unassignedTopics.Count; i++)
+            {
+                var topicAssigned = false;
+                var topic = unassignedTopics[i];
+
+                for (var s = slotId; s < slots.Count; s++)
+                {
+                    var slot = slots[s];
+
+                    for (var r = roomId; r < rooms.Count; r++)
+                    {
+                        var room = rooms[r];
+
+                        if (calendar.ContainsKey((s, r)))
+                        {
+                            continue;
+                        }
+
+                        if (topic.Attendees.Count > room.Seats.GetValueOrDefault())
+                        {
+                            s++;
+                            break;
+                        }
+
+                        var newTopic = topic with
+                        {
+                            SlotId = slot.Id,
+                            RoomId = room.Id,
+                        };
+                        session.Topics.Remove(topic);
+                        session.Topics.Add(newTopic);
+                        calendar[(s, r)] = newTopic;
+                        topicAssigned = true;
+                        break;
+                    }
+
+                    if (topicAssigned)
+                    {
+                        break;
+                    }
                 }
             }
         });
