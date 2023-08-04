@@ -1,6 +1,8 @@
+using System.Collections.ObjectModel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using OpenSpace.Application.Entities;
+using OpenSpace.Application.Exceptions;
 using OpenSpace.Application.Repositories;
 using OpenSpace.Application.Services;
 using OpenSpace.WebApi.Hubs;
@@ -92,6 +94,103 @@ public class SessionsController : Controller
             {
                 topic.Ratings.Clear();
                 _sessionsHub.Clients.Group(id.ToString()).UpdateTopic(topic);
+            }
+        });
+
+    [HttpPatch("{id}/optimise")]
+    public Task OptimiseSessionTopicsAsync(int id)
+        => _sessionRepository.Update(id, session =>
+        {
+            var rooms = session.Rooms.OrderByDescending(r => r.Seats).ToList();
+
+            var slots = session.Slots.ToList();
+
+            // #region Segeregating topic based on assignment
+            var unassignedTopics = new List<Topic>();
+            var assignedTopics = new List<Topic>();
+            foreach (var topic in session.Topics)
+            {
+                if (string.IsNullOrEmpty(topic.SlotId) || string.IsNullOrEmpty(topic.RoomId))
+                {
+                    unassignedTopics.Add(topic);
+                }
+                else
+                {
+                    var topicSlot = session.Slots.FirstOrDefault(x => x.Id.Equals(topic.SlotId)) ?? throw new EntityNotFoundException("Slot not found");
+
+                    var topicRoom = rooms.FirstOrDefault(r => r.Id.Equals(topic.RoomId)) ?? throw new EntityNotFoundException("Room not found");
+
+                    if (topicSlot != null && topicRoom != null)
+                    {
+                        assignedTopics.Add(topic);
+                    }
+                }
+            }
+
+            unassignedTopics = unassignedTopics.OrderByDescending(t => t.Attendees.Count).ToList();
+
+            // Order assigned topics on slots by attendees count
+            assignedTopics = assignedTopics.OrderByDescending(t => t.Attendees.Count).ToList(); // #endregion
+
+            Dictionary<(int, int), Topic> calendar = new();
+
+            // #region  Assigned Topics Senario 1
+            int roomId = 0, slotId = 0;
+            for (var i = 0; i < assignedTopics.Count; i++)
+            {
+                var topicAssigned = false;
+                var topic = assignedTopics[i];
+
+                for (var s = slotId; s < slots.Count; s++)
+                {
+                    var slot = slots[slotId];
+
+                    for (var r = roomId; r < rooms.Count; r++)
+                    {
+                        var room = rooms[roomId];
+
+                        if (calendar.ContainsKey((slotId, roomId)))
+                        {
+                            continue;
+                        }
+
+                        if (topic.Attendees.Count > room.Seats.GetValueOrDefault())
+                        {
+                            s++;
+                            break;
+                        }
+
+                        var newTopic = topic with
+                        {
+                            SlotId = slot.Id,
+                            RoomId = room.Id,
+                        };
+                        session.Topics.Remove(topic);
+                        session.Topics.Add(newTopic);
+                        calendar[(slotId, roomId)] = topic;
+                        topicAssigned = true;
+
+                        if (topicAssigned)
+                        {
+                            break;
+                        }
+                    }
+
+                    if (topicAssigned)
+                    {
+                        break;
+                    }
+                }
+
+                if (!topicAssigned)
+                {
+                    topic = topic with
+                    {
+                        SlotId = null,
+                        RoomId = null,
+                    };
+                    unassignedTopics.Add(topic);
+                }
             }
         });
 }

@@ -155,4 +155,11 @@ export class SessionModalComponent implements OnInit {
     await this.sessionService.delete(this.item.id);
     this.router.navigate(["/"]);
   }
+
+  public optimiseTopics(){
+    if(confirm("Do you really want to optimise the topics?")){
+      console.log("Current session id is :",this.sessionService.currentSession.id);
+      this.sessionService.optimiseTopics(this.sessionService.currentSession.id)
+    }
+  }
 }

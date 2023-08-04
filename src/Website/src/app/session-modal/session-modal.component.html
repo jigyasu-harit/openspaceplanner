@@ -7,6 +7,9 @@
       <li [class.is-active]="selectedTab === 'imports'" (click)="selectTab('imports')">
         <a>Imports</a>
       </li>
+      <li [class.is-active]="selectedTab === 'organisation'" (click)="selectTab('organisation')">
+        <a>Organise Topics</a>
+      </li>
     </ul>
   </div>
 
@@ -62,6 +65,11 @@
       <button class="button is-danger" (click)="importAll()" [disabled]="selectedSession == null">Import all</button>
       <button class="button is-danger" (click)="importRooms()" [disabled]="selectedSession == null">Import rooms</button>
       <button class="button is-danger" (click)="importSlots()" [disabled]="selectedSession == null">Import slots</button>
+    </div>
+  </div>
+  <div *ngIf="selectedTab === 'organisation'">
+    <div class="modal-buttons">
+      <button class="button is-danger" (click)="optimiseTopics()" [disabled]="selectedSession == null">Optimize topics</button>
     </div>
   </div>
 </app-modal-dialog>

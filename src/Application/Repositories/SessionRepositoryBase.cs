@@ -80,15 +80,12 @@ public abstract class SessionRepositoryBase : ISessionRepository
         return Task.CompletedTask;
     }
 
-    protected void LoadSessions(string sessionJson)
-    {
-        Sessions = new List<Session>(JsonConvert.DeserializeObject<Session[]>(
+    protected void LoadSessions(string sessionJson) => Sessions = new List<Session>(JsonConvert.DeserializeObject<Session[]>(
             sessionJson,
             new JsonSerializerSettings
             {
                 DefaultValueHandling = DefaultValueHandling.Populate,
             }));
-    }
 
     protected abstract void Save();
 }

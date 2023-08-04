@@ -240,6 +240,10 @@ export class SessionService {
     await lastValueFrom(this.http.delete(`${environment.apiUrl}/api/sessions/${this.currentSession.id}/attendances`));
   }
 
+  public async optimiseTopics(sessionId : number){
+    this.http.patch(`${environment.apiUrl}/api/sessions/${sessionId}/optimise`,null)
+  }
+
   public async deleteTopicRating(topicId: string): Promise<void> {
     const topic = this.currentSession.topics.find(topic => topic.id === topicId);
     if (topic == null || topic.ratings.length <= 0) {
