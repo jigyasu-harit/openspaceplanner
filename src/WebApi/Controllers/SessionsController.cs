@@ -97,7 +97,7 @@ public class SessionsController : Controller
             }
         });
 
-    [HttpPatch("{id}/optimise")]
+    [HttpPut("{id}/optimise")]
     public Task OptimiseSessionTopicsAsync(int id)
         => _sessionRepository.Update(id, session =>
         {
@@ -169,6 +169,8 @@ public class SessionsController : Controller
                         session.Topics.Add(newTopic);
                         calendar[(s, r)] = newTopic;
                         topicAssigned = true;
+                        _sessionsHub.Clients.Group(id.ToString()).UpdateTopic(newTopic);
+
                         break;
                     }
 
@@ -188,6 +190,7 @@ public class SessionsController : Controller
                     session.Topics.Remove(topic);
                     session.Topics.Add(newTopic);
                     unassignedTopics.Add(newTopic);
+                    _sessionsHub.Clients.Group(id.ToString()).UpdateTopic(newTopic);
                 }
             }
 
@@ -226,6 +229,7 @@ public class SessionsController : Controller
                         session.Topics.Add(newTopic);
                         calendar[(s, r)] = newTopic;
                         topicAssigned = true;
+                        _sessionsHub.Clients.Group(id.ToString()).UpdateTopic(newTopic);
                         break;
                     }
 
