@@ -13,4 +13,4 @@ public record Topic(
     ICollection<Rating> Ratings,
     int Slots = 1);
 
-public record OptimiseTopicsConfigs(bool OptimiseUnAssignedTopics = false);
+public record OptimiseTopicsConfigs(bool OptimiseUnAssignedTopics = false, bool RectifyConflicts = true);

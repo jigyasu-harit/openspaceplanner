@@ -242,5 +242,94 @@ public class SessionsController : Controller
                     }
                 }
             }
+
+            if (!configs.RectifyConflicts)
+            {
+                return;
+            }
+
+            Dictionary<(string, string), List<Topic>> ownerTopics = new();
+            foreach (var topic in session.Topics)
+            {
+                if (string.IsNullOrEmpty(topic.SlotId) || string.IsNullOrEmpty(topic.RoomId) || string.IsNullOrEmpty(topic.Owner))
+                {
+                    continue;
+                }
+
+                if (ownerTopics.ContainsKey((topic.Owner!, topic.SlotId!)))
+                {
+                    ownerTopics[(topic.Owner!, topic.SlotId!)].Add(topic);
+                }
+                else
+                {
+                    ownerTopics[(topic.Owner!, topic.SlotId!)] = new List<Topic>() { topic };
+                }
+            }
+
+            foreach (var ownerTopic in ownerTopics.ToDictionary(x => x.Key, y => y.Value))
+            {
+                var slotid = ownerTopic.Key.Item2;
+                var owner = ownerTopic.Key.Item1;
+                if (ownerTopic.Value.Count > 1)
+                {
+                    for (var i = 1; i < ownerTopic.Value.Count; i++)
+                    {
+                        var newPositionAssigned = false;
+                        var topic = ownerTopic.Value[i];
+                        for (var s = 0; s < slots.Count; s++)
+                        {
+                            var slot = slots[s];
+
+                            if (slot.Id.Equals(slotid))
+                            {
+                                continue;
+                            }
+
+                            if (ownerTopics.ContainsKey((owner, slot.Id)))
+                            {
+                                continue;
+                            }
+
+                            for (var r = 0; r < rooms.Count; r++)
+                            {
+                                var room = rooms[r];
+
+                                if (!calendar.ContainsKey((s, r)))
+                                {
+                                    if (room.Seats >= topic.Attendees.Count)
+                                    {
+                                        var newTopic = topic with
+                                        {
+                                            RoomId = room.Id,
+                                            SlotId = slot.Id,
+                                        };
+                                        session.Topics.Remove(topic);
+                                        session.Topics.Add(newTopic);
+                                        calendar[(r, s)] = newTopic;
+                                        _sessionsHub.Clients.Group(id.ToString()).UpdateTopic(newTopic);
+
+                                        ownerTopics[(owner, newTopic.SlotId!)] = new List<Topic>() { newTopic };
+                                        newPositionAssigned = true;
+                                    }
+                                }
+                                else
+                                {
+                                    // checking
+                                }
+
+                                if (newPositionAssigned)
+                                {
+                                    break;
+                                }
+                            }
+
+                            if (newPositionAssigned)
+                            {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
         });
 }
