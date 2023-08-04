@@ -12,3 +12,5 @@ public record Topic(
     ICollection<Feedback> Feedback,
     ICollection<Rating> Ratings,
     int Slots = 1);
+
+public record OptimiseTopicsConfigs(bool OptimiseUnAssignedTopics = false);

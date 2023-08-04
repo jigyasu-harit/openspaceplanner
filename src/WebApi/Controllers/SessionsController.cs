@@ -98,7 +98,7 @@ public class SessionsController : Controller
         });
 
     [HttpPut("{id}/optimise")]
-    public Task OptimiseSessionTopicsAsync(int id)
+    public Task OptimiseSessionTopicsAsync(int id, [FromBody] OptimiseTopicsConfigs configs)
         => _sessionRepository.Update(id, session =>
         {
             var rooms = session.Rooms.OrderByDescending(r => r.Seats).ToList();
@@ -194,48 +194,51 @@ public class SessionsController : Controller
                 }
             }
 
-            roomId = 0;
-            slotId = 0;
-            for (var i = 0; i < unassignedTopics.Count; i++)
+            if (configs.OptimiseUnAssignedTopics)
             {
-                var topicAssigned = false;
-                var topic = unassignedTopics[i];
-
-                for (var s = slotId; s < slots.Count; s++)
+                roomId = 0;
+                slotId = 0;
+                for (var i = 0; i < unassignedTopics.Count; i++)
                 {
-                    var slot = slots[s];
+                    var topicAssigned = false;
+                    var topic = unassignedTopics[i];
 
-                    for (var r = roomId; r < rooms.Count; r++)
+                    for (var s = slotId; s < slots.Count; s++)
                     {
-                        var room = rooms[r];
+                        var slot = slots[s];
 
-                        if (calendar.ContainsKey((s, r)))
+                        for (var r = roomId; r < rooms.Count; r++)
                         {
-                            continue;
-                        }
+                            var room = rooms[r];
 
-                        if (topic.Attendees.Count > room.Seats.GetValueOrDefault())
-                        {
-                            s++;
+                            if (calendar.ContainsKey((s, r)))
+                            {
+                                continue;
+                            }
+
+                            if (topic.Attendees.Count > room.Seats.GetValueOrDefault())
+                            {
+                                s++;
+                                break;
+                            }
+
+                            var newTopic = topic with
+                            {
+                                SlotId = slot.Id,
+                                RoomId = room.Id,
+                            };
+                            session.Topics.Remove(topic);
+                            session.Topics.Add(newTopic);
+                            calendar[(s, r)] = newTopic;
+                            topicAssigned = true;
+                            _sessionsHub.Clients.Group(id.ToString()).UpdateTopic(newTopic);
                             break;
                         }
 
-                        var newTopic = topic with
+                        if (topicAssigned)
                         {
-                            SlotId = slot.Id,
-                            RoomId = room.Id,
-                        };
-                        session.Topics.Remove(topic);
-                        session.Topics.Add(newTopic);
-                        calendar[(s, r)] = newTopic;
-                        topicAssigned = true;
-                        _sessionsHub.Clients.Group(id.ToString()).UpdateTopic(newTopic);
-                        break;
-                    }
-
-                    if (topicAssigned)
-                    {
-                        break;
+                            break;
+                        }
                     }
                 }
             }
