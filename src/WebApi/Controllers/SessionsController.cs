@@ -315,6 +315,53 @@ public class SessionsController : Controller
                                 else
                                 {
                                     // checking
+                                    var existingTopic = calendar[(s, r)];
+                                    var existingTopicPotentialRoom = rooms.FirstOrDefault(x => x.Id.Equals(topic.RoomId));
+                                    var existingTopicPotentialSlot = slots.FirstOrDefault(x => x.Id.Equals(topic.SlotId));
+                                    if (!string.IsNullOrEmpty(existingTopic.Owner) && ownerTopics.ContainsKey((existingTopic.Owner!, existingTopicPotentialSlot?.Id!)))
+                                    {
+                                        continue;
+                                    }
+
+                                    if (room.Seats >= topic.Attendees.Count && existingTopic.Attendees.Count <= existingTopicPotentialRoom?.Seats.GetValueOrDefault())
+                                    {
+                                        var newTopic = topic with
+                                        {
+                                            RoomId = room.Id,
+                                            SlotId = slot.Id,
+                                        };
+                                        session.Topics.Remove(topic);
+                                        session.Topics.Add(newTopic);
+                                        calendar[(r, s)] = newTopic;
+                                        _sessionsHub.Clients.Group(id.ToString()).UpdateTopic(newTopic);
+                                        ownerTopics[(owner, newTopic.SlotId!)] = new List<Topic>() { newTopic };
+
+                                        var replacedTopic = existingTopic with
+                                        {
+                                            RoomId = existingTopicPotentialRoom.Id,
+                                            SlotId = existingTopicPotentialSlot?.Id,
+                                        };
+                                        session.Topics.Remove(existingTopic);
+                                        session.Topics.Add(replacedTopic);
+                                        _sessionsHub.Clients.Group(id.ToString()).UpdateTopic(replacedTopic);
+
+                                        ownerTopics[(existingTopic.Owner!, existingTopicPotentialSlot?.Id!)] = new List<Topic>() { replacedTopic };
+
+                                        if (ownerTopics.ContainsKey((existingTopic.Owner!, slot.Id)))
+                                        {
+                                            var oldslot = ownerTopics[(existingTopic.Owner!, slot.Id)];
+                                            if (oldslot.Count > 1)
+                                            {
+                                                oldslot.Remove(existingTopic);
+                                            }
+                                            else
+                                            {
+                                                ownerTopics.Remove((existingTopic.Owner!, slot.Id));
+                                            }
+                                        }
+
+                                        newPositionAssigned = true;
+                                    }
                                 }
 
                                 if (newPositionAssigned)
